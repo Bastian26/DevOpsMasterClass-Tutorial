@@ -1,0 +1,41 @@
+version: '3'
+
+services:
+  # Each entry in the services section will create a seperate docker container on docker-compose up -d
+  # Container 1
+  distro:
+    image: alpine # Image would be download by runtime
+    restart: always # when problems occur the container should always restart
+    container_name: Custom_Alpine # Will the random generated container name
+    entrypoint: tail -f /dev/null # tail -f is an ongoing process, so it will run indefinitely and prevent the container from stoppping, default entyrpoint is overridden to keep the container running
+
+  # Container 2
+  database:
+    image: postgres:latest
+    restart: always
+    container_name: postgres_db
+    ports: 
+      - "5432:5432"
+    volumes:
+      - ../dump:/tmp/ 
+  
+  # Container 3
+  web:
+    image: nginx
+    restart: always
+    container_name: nginx_web
+    ports:
+      - "8080:80"
+    volumes:
+      - ./mysite.template:/etc/nginx/conf.d/mysite.template
+    environment:
+      - NGINX_HOST=sample.com
+      - NGINX_port=80
+    links:
+      # db is a alias
+      database:db 
+      distro 
+
+volumes:
+  data: 
+    external: true #tells docker compose to use preexsiting external volume - docker volume create --name=data is necessary
